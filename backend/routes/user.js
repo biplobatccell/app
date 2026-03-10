@@ -174,7 +174,7 @@ router.post('/businesses', authenticate, uploadMultiple, [
       userId: req.user.id,
       name,
       contactNumber,
-      email,
+      email: email || null, // Allow null/empty email
       address,
       categoryId,
       locationId,

@@ -264,7 +264,7 @@ export default function AddBusiness() {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Images (Max 5)
+                  Business Images (Max 5) - All formats supported
                 </label>
                 <input
                   type="file"
@@ -277,7 +277,7 @@ export default function AddBusiness() {
                 <p className="text-sm text-gray-500 mt-1">
                   {formData.images.length > 0
                     ? `${formData.images.length} image(s) selected`
-                    : 'Select up to 5 images for your business'}
+                    : 'Select up to 5 images (JPEG, PNG, GIF, WebP, BMP, SVG, TIFF, etc.)'}
                 </p>
               </div>
             </div>

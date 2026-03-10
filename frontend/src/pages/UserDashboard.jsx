@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import BusinessModal from '../components/BusinessModal';
 
 export default function UserDashboard() {
   const { user, logout } = useAuth();
@@ -10,8 +11,8 @@ export default function UserDashboard() {
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'my'
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -130,13 +131,18 @@ export default function UserDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activeTab === 'all'
             ? businesses.map((business) => (
-                <BusinessCard key={business.id} business={business} />
+                <BusinessCard 
+                  key={business.id} 
+                  business={business} 
+                  onClick={() => setSelectedBusiness(business)}
+                />
               ))
             : myBusinesses.map((business) => (
                 <MyBusinessCard
                   key={business.id}
                   business={business}
                   onUpdate={fetchData}
+                  onClick={() => setSelectedBusiness(business)}
                 />
               ))}
         </div>
@@ -161,41 +167,69 @@ export default function UserDashboard() {
           </div>
         )}
       </main>
+
+      {/* Business Detail Modal */}
+      {selectedBusiness && (
+        <BusinessModal 
+          business={selectedBusiness} 
+          onClose={() => setSelectedBusiness(null)} 
+        />
+      )}
     </div>
   );
 }
 
 // Business Card Component
-function BusinessCard({ business }) {
+function BusinessCard({ business, onClick }) {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="p-6">
-        <h3 className="text-xl font-bold text-secondary mb-2">{business.name}</h3>
-        <div className="space-y-2 text-sm text-gray-600">
-          <p>
-            <span className="font-semibold">Category:</span> {business.category?.name}
-          </p>
-          <p>
-            <span className="font-semibold">Location:</span> {business.location?.name}
-          </p>
-          <p>
-            <span className="font-semibold">Contact:</span> {business.contactNumber}
-          </p>
-          {business.email && (
-            <p>
-              <span className="font-semibold">Email:</span> {business.email}
-            </p>
+    <div 
+      onClick={onClick}
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
+    >
+      {/* Business Image Preview */}
+      {business.images && business.images.length > 0 && (
+        <div className="relative h-48 overflow-hidden bg-gray-200">
+          <img
+            src={`http://localhost:8001${business.images[0]}`}
+            alt={business.name}
+            className="w-full h-full object-cover"
+          />
+          {business.images.length > 1 && (
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
+              +{business.images.length - 1} more
+            </div>
           )}
-          <p className="text-gray-500">{business.address}</p>
         </div>
+      )}
+      
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-secondary mb-2 line-clamp-1">{business.name}</h3>
+        <div className="space-y-2 text-sm text-gray-600">
+          <p className="flex items-center gap-2">
+            <span className="font-semibold">📂</span> 
+            <span className="truncate">{business.category?.name}</span>
+          </p>
+          <p className="flex items-center gap-2">
+            <span className="font-semibold">📍</span> 
+            <span className="truncate">{business.location?.name}</span>
+          </p>
+          <p className="flex items-center gap-2">
+            <span className="font-semibold">📞</span> 
+            <span className="truncate">{business.contactNumber}</span>
+          </p>
+        </div>
+        <button className="mt-4 w-full bg-primary text-white py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-semibold">
+          View Details
+        </button>
       </div>
     </div>
   );
 }
 
 // My Business Card Component
-function MyBusinessCard({ business, onUpdate }) {
-  const handleDelete = async () => {
+function MyBusinessCard({ business, onUpdate, onClick }) {
+  const handleDelete = async (e) => {
+    e.stopPropagation(); // Prevent modal from opening
     if (!confirm('Are you sure you want to delete this business?')) return;
 
     try {
@@ -208,12 +242,31 @@ function MyBusinessCard({ business, onUpdate }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div 
+      onClick={onClick}
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+    >
+      {/* Business Image Preview */}
+      {business.images && business.images.length > 0 && (
+        <div className="relative h-48 overflow-hidden bg-gray-200">
+          <img
+            src={`http://localhost:8001${business.images[0]}`}
+            alt={business.name}
+            className="w-full h-full object-cover"
+          />
+          {business.images.length > 1 && (
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
+              +{business.images.length - 1} more
+            </div>
+          )}
+        </div>
+      )}
+      
       <div className="p-6">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="text-xl font-bold text-secondary">{business.name}</h3>
+          <h3 className="text-xl font-bold text-secondary line-clamp-1 flex-1">{business.name}</h3>
           <span
-            className={`text-xs px-2 py-1 rounded-full ${
+            className={`text-xs px-2 py-1 rounded-full ml-2 flex-shrink-0 ${
               business.isVerified
                 ? 'bg-green-100 text-green-800'
                 : 'bg-yellow-100 text-yellow-800'
@@ -223,20 +276,32 @@ function MyBusinessCard({ business, onUpdate }) {
           </span>
         </div>
         <div className="space-y-2 text-sm text-gray-600 mb-4">
-          <p>
-            <span className="font-semibold">Category:</span> {business.category?.name}
+          <p className="flex items-center gap-2">
+            <span className="font-semibold">📂</span> 
+            <span className="truncate">{business.category?.name}</span>
           </p>
-          <p>
-            <span className="font-semibold">Location:</span> {business.location?.name}
+          <p className="flex items-center gap-2">
+            <span className="font-semibold">📍</span> 
+            <span className="truncate">{business.location?.name}</span>
           </p>
-          <p>
-            <span className="font-semibold">Contact:</span> {business.contactNumber}
+          <p className="flex items-center gap-2">
+            <span className="font-semibold">📞</span> 
+            <span className="truncate">{business.contactNumber}</span>
           </p>
         </div>
         <div className="flex gap-2">
           <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+            className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold"
+          >
+            View Details
+          </button>
+          <button
             onClick={handleDelete}
-            className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
           >
             Delete
           </button>
