@@ -2,9 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
+import AddBusiness from './pages/AddBusiness';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -72,6 +74,15 @@ function AppRoutes() {
       />
       
       <Route 
+        path="/app/forgot-password" 
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        } 
+      />
+      
+      <Route 
         path="/app/dashboard" 
         element={
           <ProtectedRoute>
@@ -85,6 +96,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/app/add-business" 
+        element={
+          <ProtectedRoute>
+            <AddBusiness />
           </ProtectedRoute>
         } 
       />

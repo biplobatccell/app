@@ -1,23 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import ENV from '../config/env';
 
 export default function Profile() {
   const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' or 'password'
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    dateOfBirth: user?.dateOfBirth || '',
-    gender: user?.gender || '',
-    address: user?.address || '',
-    aadharNumber: user?.aadharNumber || '',
-    photo: null
+    name: '',
+    email: '',
+    mobile: '',
+    dateOfBirth: '',
+    gender: '',
+    address: '',
+    aadharNumber: '',
+    photo: null,
+    currentPhoto: ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -25,6 +30,35 @@ export default function Profile() {
     newPassword: '',
     confirmPassword: ''
   });
+
+  // Fetch profile data from database on mount
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await api.get('/user/profile');
+      if (response.data.success) {
+        const userData = response.data.data;
+        setProfileData({
+          name: userData.name || '',
+          email: userData.email || '',
+          mobile: userData.mobile || '',
+          dateOfBirth: userData.dateOfBirth || '',
+          gender: userData.gender || '',
+          address: userData.address || '',
+          aadharNumber: userData.aadharNumber || '',
+          photo: null,
+          currentPhoto: userData.photo || ''
+        });
+      }
+    } catch (err) {
+      setError('Failed to fetch profile data');
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const handleProfileChange = (e) => {
     const { name, value, files } = e.target;
@@ -71,6 +105,8 @@ export default function Profile() {
       if (response.data.success) {
         updateUser(response.data.data);
         setMessage('Profile updated successfully!');
+        // Refresh profile data to get new photo URL
+        await fetchProfile();
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update profile');
@@ -78,6 +114,14 @@ export default function Profile() {
       setLoading(false);
     }
   };
+
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -145,13 +189,21 @@ export default function Profile() {
         {/* User Info Card */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-primary text-white rounded-full flex items-center justify-center text-3xl font-bold">
-              {user?.name?.charAt(0).toUpperCase()}
+            <div className="w-20 h-20 bg-primary text-white rounded-full flex items-center justify-center text-3xl font-bold overflow-hidden">
+              {profileData.currentPhoto ? (
+                <img 
+                  src={`${ENV.BACKEND_URL}${profileData.currentPhoto}`} 
+                  alt={profileData.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                profileData.name?.charAt(0).toUpperCase()
+              )}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-secondary">{user?.name}</h2>
+              <h2 className="text-2xl font-bold text-secondary">{profileData.name}</h2>
               <p className="text-gray-600">@{user?.username}</p>
-              <p className="text-sm text-gray-500">{user?.email} • {user?.mobile}</p>
+              <p className="text-sm text-gray-500">{profileData.email} • {profileData.mobile}</p>
               <div className="mt-2">
                 <span
                   className={`text-xs px-3 py-1 rounded-full ${
@@ -254,16 +306,18 @@ export default function Profile() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Aadhar Number
+                      Aadhar Number (Not Changeable)
                     </label>
                     <input
                       type="text"
                       name="aadharNumber"
                       value={profileData.aadharNumber}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                       maxLength="12"
+                      disabled
+                      readOnly
                     />
+                    <p className="text-xs text-gray-500 mt-1">Aadhar number cannot be changed after verification</p>
                   </div>
                 </div>
 
@@ -284,6 +338,16 @@ export default function Profile() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Update Photo
                   </label>
+                  {profileData.currentPhoto && (
+                    <div className="mb-2">
+                      <img 
+                        src={`${ENV.BACKEND_URL}${profileData.currentPhoto}`} 
+                        alt="Current profile"
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Current photo</p>
+                    </div>
+                  )}
                   <input
                     type="file"
                     name="photo"
@@ -291,6 +355,7 @@ export default function Profile() {
                     accept="image/*"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Upload new photo to replace current one</p>
                 </div>
 
                 <button
