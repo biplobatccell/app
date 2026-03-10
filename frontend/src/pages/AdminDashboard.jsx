@@ -3,6 +3,9 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import BusinessModal from '../components/BusinessModal';
+import MemberModal from '../components/MemberModal';
+import ENV from '../config/env';
 
 export default function AdminDashboard() {
   const { logout } = useAuth();
@@ -186,6 +189,7 @@ function MembersManagement() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, verified, unverified
+  const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
     fetchMembers();
@@ -267,6 +271,12 @@ function MembersManagement() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                SL
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Photo
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 User
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -281,8 +291,30 @@ function MembersManagement() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {members.map((member) => (
-              <tr key={member.id}>
+            {members.map((member, index) => (
+              <tr 
+                key={member.id} 
+                className="hover:bg-gray-50 cursor-pointer"
+                onClick={() => setSelectedMember(member)}
+              >
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                    {member.photo ? (
+                      <img 
+                        src={`${ENV.BACKEND_URL}${member.photo}`} 
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xl font-bold text-gray-400">
+                        {member.name?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">{member.name}</div>
                   <div className="text-sm text-gray-500">@{member.username}</div>
@@ -312,14 +344,20 @@ function MembersManagement() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   {!member.isVerified && (
                     <button
-                      onClick={() => handleVerify(member.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleVerify(member.id);
+                      }}
                       className="text-green-600 hover:text-green-900 mr-4"
                     >
                       Verify
                     </button>
                   )}
                   <button
-                    onClick={() => handleToggleStatus(member.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleStatus(member.id);
+                    }}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     {member.isActive ? 'Deactivate' : 'Activate'}
@@ -330,6 +368,16 @@ function MembersManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Member Detail Modal */}
+      {selectedMember && (
+        <MemberModal
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
+          onVerify={handleVerify}
+          onToggleStatus={handleToggleStatus}
+        />
+      )}
     </div>
   );
 }
@@ -338,7 +386,8 @@ function MembersManagement() {
 function BusinessesManagement() {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('pending');
+  const [filter, setFilter] = useState('all'); // Changed default to 'all'
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
 
   useEffect(() => {
     fetchBusinesses();
@@ -348,7 +397,8 @@ function BusinessesManagement() {
     try {
       let url = '/admin/businesses';
       if (filter === 'verified') url += '?verified=true';
-      if (filter === 'pending') url += '?verified=false';
+      if (filter === 'unverified') url += '?verified=false';
+      // For 'all', don't add any filter
 
       const response = await api.get(url);
       setBusinesses(response.data.data);
@@ -389,12 +439,12 @@ function BusinessesManagement() {
         <h1 className="text-3xl font-bold text-secondary">Business Listings</h1>
         <div className="flex gap-2">
           <button
-            onClick={() => setFilter('pending')}
+            onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg ${
-              filter === 'pending' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'
+              filter === 'all' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'
             }`}
           >
-            Pending
+            All
           </button>
           <button
             onClick={() => setFilter('verified')}
@@ -404,53 +454,89 @@ function BusinessesManagement() {
           >
             Verified
           </button>
+          <button
+            onClick={() => setFilter('unverified')}
+            className={`px-4 py-2 rounded-lg ${
+              filter === 'unverified' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            Unverified
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {businesses.map((business) => (
-          <div key={business.id} className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold text-secondary">{business.name}</h3>
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  business.isVerified
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}
-              >
-                {business.isVerified ? 'Verified' : 'Pending'}
-              </span>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600 mb-4">
-              <p>
-                <span className="font-semibold">Owner:</span> {business.user?.name}
-              </p>
-              <p>
-                <span className="font-semibold">Category:</span> {business.category?.name}
-              </p>
-              <p>
-                <span className="font-semibold">Location:</span> {business.location?.name}
-              </p>
-              <p>
-                <span className="font-semibold">Contact:</span> {business.contactNumber}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {!business.isVerified && (
-                <button
-                  onClick={() => handleApprove(business.id)}
-                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+          <div 
+            key={business.id} 
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+            onClick={() => setSelectedBusiness(business)}
+          >
+            {/* Business Image Preview */}
+            {business.images && business.images.length > 0 && (
+              <div className="relative h-48 overflow-hidden bg-gray-200">
+                <img
+                  src={`${ENV.BACKEND_URL}${business.images[0]}`}
+                  alt={business.name}
+                  className="w-full h-full object-cover"
+                />
+                {business.images.length > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
+                    +{business.images.length - 1} more
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-secondary line-clamp-1 flex-1">{business.name}</h3>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ml-2 flex-shrink-0 ${
+                    business.isVerified
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}
                 >
-                  Approve
+                  {business.isVerified ? 'Verified' : 'Pending'}
+                </span>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600 mb-4">
+                <p>
+                  <span className="font-semibold">Owner:</span> {business.user?.name}
+                </p>
+                <p>
+                  <span className="font-semibold">Category:</span> {business.category?.name}
+                </p>
+                <p>
+                  <span className="font-semibold">Location:</span> {business.location?.name}
+                </p>
+                <p>
+                  <span className="font-semibold">Contact:</span> {business.contactNumber}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {!business.isVerified && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApprove(business.id);
+                    }}
+                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                  >
+                    Approve
+                  </button>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleStatus(business.id);
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                >
+                  {business.isActive ? 'Deactivate' : 'Activate'}
                 </button>
-              )}
-              <button
-                onClick={() => handleToggleStatus(business.id)}
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-              >
-                {business.isActive ? 'Deactivate' : 'Activate'}
-              </button>
+              </div>
             </div>
           </div>
         ))}
@@ -460,6 +546,14 @@ function BusinessesManagement() {
         <div className="text-center py-12 text-gray-500">
           No {filter} businesses found.
         </div>
+      )}
+
+      {/* Business Detail Modal */}
+      {selectedBusiness && (
+        <BusinessModal
+          business={selectedBusiness}
+          onClose={() => setSelectedBusiness(null)}
+        />
       )}
     </div>
   );
