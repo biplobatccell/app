@@ -79,9 +79,17 @@ export default function AddBusiness() {
       data.append('locationId', formData.locationId);
       
       // Append all images
-      formData.images.forEach((image) => {
+      console.log('Images to upload:', formData.images.length);
+      formData.images.forEach((image, index) => {
+        console.log(`Appending image ${index}:`, image.name, image.type, image.size);
         data.append('images', image);
       });
+
+      // Log FormData contents
+      console.log('FormData entries:');
+      for (let pair of data.entries()) {
+        console.log(pair[0], ':', pair[1]);
+      }
 
       const response = await api.post('/user/businesses', data, {
         headers: {
@@ -96,6 +104,7 @@ export default function AddBusiness() {
         }, 2000);
       }
     } catch (err) {
+      console.error('Submit error:', err);
       setError(err.response?.data?.message || 'Failed to create business listing');
     } finally {
       setLoading(false);

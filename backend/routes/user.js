@@ -185,8 +185,14 @@ router.post('/businesses', authenticate, uploadMultiple, [
   body('locationId').isUUID()
 ], async (req, res) => {
   try {
+    console.log('=== CREATE BUSINESS REQUEST ===');
+    console.log('Body:', req.body);
+    console.log('Files:', req.files);
+    console.log('Files count:', req.files ? req.files.length : 0);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
@@ -201,20 +207,28 @@ router.post('/businesses', authenticate, uploadMultiple, [
     const { name, contactNumber, email, address, categoryId, locationId } = req.body;
 
     // Process uploaded images
-    const images = req.files ? req.files.map(file => `/uploads/businesses/${file.filename}`) : [];
+    const images = req.files ? req.files.map(file => {
+      console.log('Processing file:', file.filename);
+      return `/uploads/businesses/${file.filename}`;
+    }) : [];
+    
+    console.log('Final images array:', images);
 
     const business = await Business.create({
       userId: req.user.id,
       name,
       contactNumber,
-      email: email || null, // Allow null/empty email
+      email: email || null,
       address,
       categoryId,
       locationId,
       images,
-      isVerified: false, // Requires admin approval
+      isVerified: false,
       isActive: true
     });
+
+    console.log('Business created:', business.id);
+    console.log('=== END CREATE BUSINESS ===');
 
     res.status(201).json({
       success: true,
@@ -223,7 +237,7 @@ router.post('/businesses', authenticate, uploadMultiple, [
     });
   } catch (error) {
     console.error('Create business error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create business listing' });
+    res.status(500).json({ success: false, message: 'Failed to create business listing', error: error.message });
   }
 });
 

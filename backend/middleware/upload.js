@@ -19,12 +19,20 @@ if (!fs.existsSync(path.join(uploadDir, 'businesses'))) {
 // Storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const type = req.baseUrl.includes('user') ? 'users' : 'businesses';
-    cb(null, path.join(uploadDir, type));
+    // Determine folder based on route path
+    let folder = 'businesses';
+    if (req.path && req.path.includes('profile')) {
+      folder = 'users';
+    }
+    const destPath = path.join(uploadDir, folder);
+    console.log('Upload destination:', destPath);
+    cb(null, destPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const filename = uniqueSuffix + path.extname(file.originalname);
+    console.log('Generated filename:', filename);
+    cb(null, filename);
   }
 });
 
