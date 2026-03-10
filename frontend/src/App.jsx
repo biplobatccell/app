@@ -7,6 +7,7 @@ import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import AddBusiness from './pages/AddBusiness';
+import EditBusiness from './pages/EditBusiness';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -105,6 +106,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AddBusiness />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/app/edit-business/:id" 
+        element={
+          <ProtectedRoute>
+            <EditBusiness />
           </ProtectedRoute>
         } 
       />

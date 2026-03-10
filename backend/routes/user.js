@@ -143,6 +143,39 @@ router.get('/my-businesses', authenticate, async (req, res) => {
   }
 });
 
+// Get single business (only own)
+router.get('/businesses/:id', authenticate, async (req, res) => {
+  try {
+    const business = await Business.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.user.id
+      },
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        },
+        {
+          model: Location,
+          as: 'location',
+          attributes: ['id', 'name', 'city', 'state']
+        }
+      ]
+    });
+
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found or unauthorized' });
+    }
+
+    res.json({ success: true, data: business });
+  } catch (error) {
+    console.error('Get business error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch business' });
+  }
+});
+
 // Create business listing
 router.post('/businesses', authenticate, uploadMultiple, [
   body('name').notEmpty().trim(),
@@ -208,22 +241,37 @@ router.put('/businesses/:id', authenticate, uploadMultiple, async (req, res) => 
       return res.status(404).json({ success: false, message: 'Business not found or unauthorized' });
     }
 
-    const { name, contactNumber, email, address, categoryId, locationId } = req.body;
+    const { name, contactNumber, email, address, categoryId, locationId, existingImages } = req.body;
 
     const updateData = {
       name,
       contactNumber,
-      email,
+      email: email || null,
       address,
       categoryId,
       locationId
     };
 
-    // Process uploaded images
+    // Handle images: combine existing + new images
+    let finalImages = [];
+    
+    // Parse existing images from request (sent as JSON string)
+    if (existingImages) {
+      try {
+        finalImages = JSON.parse(existingImages);
+      } catch (e) {
+        finalImages = business.images || [];
+      }
+    }
+
+    // Add new uploaded images
     if (req.files && req.files.length > 0) {
       const newImages = req.files.map(file => `/uploads/businesses/${file.filename}`);
-      updateData.images = [...business.images, ...newImages].slice(0, 5); // Max 5 images
+      finalImages = [...finalImages, ...newImages];
     }
+
+    // Limit to max 5 images
+    updateData.images = finalImages.slice(0, 5);
 
     // Reset verification status on update
     updateData.isVerified = false;

@@ -229,7 +229,7 @@ function BusinessCard({ business, onClick }) {
 // My Business Card Component
 function MyBusinessCard({ business, onUpdate, onClick }) {
   const handleDelete = async (e) => {
-    e.stopPropagation(); // Prevent modal from opening
+    e.stopPropagation();
     if (!confirm('Are you sure you want to delete this business?')) return;
 
     try {
@@ -243,12 +243,10 @@ function MyBusinessCard({ business, onUpdate, onClick }) {
 
   return (
     <div 
-      onClick={onClick}
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all"
     >
-      {/* Business Image Preview */}
       {business.images && business.images.length > 0 && (
-        <div className="relative h-48 overflow-hidden bg-gray-200">
+        <div className="relative h-48 overflow-hidden bg-gray-200 cursor-pointer" onClick={onClick}>
           <img
             src={`http://localhost:8001${business.images[0]}`}
             alt={business.name}
@@ -297,8 +295,15 @@ function MyBusinessCard({ business, onUpdate, onClick }) {
             }}
             className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold"
           >
-            View Details
+            View
           </button>
+          <Link
+            to={`/app/edit-business/${business.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold text-center"
+          >
+            Edit
+          </Link>
           <button
             onClick={handleDelete}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
