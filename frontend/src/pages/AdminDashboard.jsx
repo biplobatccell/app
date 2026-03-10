@@ -6,6 +6,22 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import BusinessModal from '../components/BusinessModal';
 import MemberModal from '../components/MemberModal';
 import ENV from '../config/env';
+import { 
+  LayoutDashboard, 
+  Users, 
+  Building2, 
+  FolderTree, 
+  MapPin, 
+  Shield, 
+  LogOut,
+  TrendingUp,
+  UserCheck,
+  Clock,
+  Activity,
+  PieChart as PieChartIcon,
+  ArrowUpRight,
+  ArrowDownRight
+} from 'lucide-react';
 
 export default function AdminDashboard() {
   const { logout } = useAuth();
@@ -21,29 +37,36 @@ export default function AdminDashboard() {
         </div>
         <nav className="mt-6">
           <NavLink to="/app/admin" active={location.pathname === '/app/admin'}>
-            📊 Dashboard
+            <LayoutDashboard className="w-5 h-5 inline-block mr-3" />
+            Dashboard
           </NavLink>
           <NavLink to="/app/admin/members" active={location.pathname === '/app/admin/members'}>
-            👥 Members
+            <Users className="w-5 h-5 inline-block mr-3" />
+            Members
           </NavLink>
           <NavLink to="/app/admin/businesses" active={location.pathname === '/app/admin/businesses'}>
-            🏢 Businesses
+            <Building2 className="w-5 h-5 inline-block mr-3" />
+            Businesses
           </NavLink>
           <NavLink to="/app/admin/categories" active={location.pathname === '/app/admin/categories'}>
-            📁 Categories
+            <FolderTree className="w-5 h-5 inline-block mr-3" />
+            Categories
           </NavLink>
           <NavLink to="/app/admin/locations" active={location.pathname === '/app/admin/locations'}>
-            📍 Locations
+            <MapPin className="w-5 h-5 inline-block mr-3" />
+            Locations
           </NavLink>
           <NavLink to="/app/admin/admins" active={location.pathname === '/app/admin/admins'}>
-            ⚙️ Admins
+            <Shield className="w-5 h-5 inline-block mr-3" />
+            Admins
           </NavLink>
         </nav>
         <div className="absolute bottom-0 w-64 p-6">
           <button
             onClick={logout}
-            className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
           >
+            <LogOut className="w-5 h-5" />
             Logout
           </button>
         </div>
@@ -98,67 +121,136 @@ function DashboardHome() {
   };
 
   if (loading) {
-    return <div className="p-8">Loading...</div>;
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-secondary mb-8">Dashboard Overview</h1>
+    <div className="p-8 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-secondary mb-2">Dashboard Overview</h1>
+        <p className="text-gray-600 flex items-center gap-2">
+          <Activity className="w-4 h-4" />
+          Real-time insights and analytics
+        </p>
+      </div>
 
-      {/* Statistics Cards */}
+      {/* Statistics Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
+        <ModernStatCard
           title="Total Users"
           value={stats?.statistics.users.total || 0}
           subtitle={`${stats?.statistics.users.verified || 0} verified`}
+          trend={stats?.statistics.users.recent || 0}
+          trendLabel="new this month"
+          icon={<Users className="w-6 h-6" />}
           color="blue"
         />
-        <StatCard
+        <ModernStatCard
           title="Total Businesses"
           value={stats?.statistics.businesses.total || 0}
           subtitle={`${stats?.statistics.businesses.pending || 0} pending approval`}
+          trend={stats?.statistics.businesses.verified || 0}
+          trendLabel="verified"
+          icon={<Building2 className="w-6 h-6" />}
           color="green"
         />
-        <StatCard
+        <ModernStatCard
           title="Categories"
           value={stats?.statistics.categories || 0}
           subtitle="Active categories"
+          icon={<FolderTree className="w-6 h-6" />}
           color="purple"
         />
-        <StatCard
+        <ModernStatCard
           title="Locations"
           value={stats?.statistics.locations || 0}
           subtitle="Active locations"
+          icon={<MapPin className="w-6 h-6" />}
           color="orange"
+        />
+      </div>
+
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <QuickStatCard
+          icon={<UserCheck className="w-8 h-8 text-green-600" />}
+          label="Active Users"
+          value={stats?.statistics.users.active || 0}
+          bgColor="bg-green-50"
+        />
+        <QuickStatCard
+          icon={<Clock className="w-8 h-8 text-yellow-600" />}
+          label="Pending Verifications"
+          value={stats?.statistics.users.unverified || 0}
+          bgColor="bg-yellow-50"
+        />
+        <QuickStatCard
+          icon={<TrendingUp className="w-8 h-8 text-blue-600" />}
+          label="Active Businesses"
+          value={stats?.statistics.businesses.active || 0}
+          bgColor="bg-blue-50"
         />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold text-secondary mb-4">User Registrations (Last 7 Days)</h2>
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-secondary flex items-center gap-2">
+                <PieChartIcon className="w-5 h-5" />
+                User Registrations
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">Last 7 days</p>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={stats?.charts.dailyRegistrations || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="count" fill="#FF6B35" name="Registrations" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="date" stroke="#666" fontSize={12} />
+              <YAxis stroke="#666" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#fff', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              <Bar dataKey="count" fill="#FF6B35" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold text-secondary mb-4">Business Listings (Last 7 Days)</h2>
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-secondary flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Business Listings
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">Last 7 days</p>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={stats?.charts.dailyBusinesses || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="count" fill="#004E89" name="Listings" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="date" stroke="#666" fontSize={12} />
+              <YAxis stroke="#666" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#fff', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              <Bar dataKey="count" fill="#004E89" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -167,19 +259,67 @@ function DashboardHome() {
   );
 }
 
-function StatCard({ title, value, subtitle, color }) {
+function ModernStatCard({ title, value, subtitle, trend, trendLabel, icon, color }) {
   const colors = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    purple: 'bg-purple-500',
-    orange: 'bg-orange-500'
+    blue: {
+      bg: 'bg-gradient-to-br from-blue-500 to-blue-600',
+      icon: 'bg-blue-400/30',
+      trend: 'bg-blue-400/20 text-blue-100'
+    },
+    green: {
+      bg: 'bg-gradient-to-br from-green-500 to-green-600',
+      icon: 'bg-green-400/30',
+      trend: 'bg-green-400/20 text-green-100'
+    },
+    purple: {
+      bg: 'bg-gradient-to-br from-purple-500 to-purple-600',
+      icon: 'bg-purple-400/30',
+      trend: 'bg-purple-400/20 text-purple-100'
+    },
+    orange: {
+      bg: 'bg-gradient-to-br from-orange-500 to-orange-600',
+      icon: 'bg-orange-400/30',
+      trend: 'bg-orange-400/20 text-orange-100'
+    }
   };
 
+  const colorScheme = colors[color];
+
   return (
-    <div className={`${colors[color]} text-white rounded-lg shadow-md p-6`}>
+    <div className={`${colorScheme.bg} text-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-transform duration-200`}>
+      <div className="flex items-start justify-between mb-4">
+        <div className={`${colorScheme.icon} p-3 rounded-lg backdrop-blur-sm`}>
+          {icon}
+        </div>
+        {trend !== undefined && (
+          <div className={`${colorScheme.trend} px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1`}>
+            <ArrowUpRight className="w-3 h-3" />
+            {trend}
+          </div>
+        )}
+      </div>
       <h3 className="text-sm font-semibold mb-2 opacity-90">{title}</h3>
       <p className="text-4xl font-bold mb-2">{value}</p>
       <p className="text-sm opacity-75">{subtitle}</p>
+      {trendLabel && (
+        <p className="text-xs opacity-60 mt-2">{trendLabel}</p>
+      )}
+    </div>
+  );
+}
+
+function QuickStatCard({ icon, label, value, bgColor }) {
+  return (
+    <div className={`${bgColor} rounded-xl p-6 border border-gray-200`}>
+      <div className="flex items-center gap-4">
+        <div className="flex-shrink-0">
+          {icon}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm text-gray-600 mb-1">{label}</p>
+          <p className="text-3xl font-bold text-gray-900">{value}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -892,6 +1032,9 @@ function LocationsManagement() {
 
 // Admins Management Component
 function AdminsManagement() {
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -899,9 +1042,23 @@ function AdminsManagement() {
     password: '',
     name: ''
   });
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
+
+  const fetchAdmins = async () => {
+    try {
+      const response = await api.get('/admin/admins');
+      setAdmins(response.data.data);
+    } catch (error) {
+      console.error('Error fetching admins:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -913,6 +1070,9 @@ function AdminsManagement() {
       await api.post('/admin/create-admin', formData);
       setMessage('Admin created successfully!');
       setFormData({ username: '', email: '', mobile: '', password: '', name: '' });
+      setShowModal(false);
+      fetchAdmins();
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create admin');
     } finally {
@@ -920,12 +1080,32 @@ function AdminsManagement() {
     }
   };
 
+  if (loading && admins.length === 0) {
+    return <div className="p-8">Loading...</div>;
+  }
+
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-secondary mb-8">Create New Admin</h1>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-secondary flex items-center gap-2">
+            <Shield className="w-8 h-8" />
+            Admin Management
+          </h1>
+          <p className="text-gray-600 mt-1">Manage system administrators</p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold flex items-center gap-2"
+        >
+          <Shield className="w-5 h-5" />
+          Add New Admin
+        </button>
+      </div>
 
       {message && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-2">
+          <UserCheck className="w-5 h-5" />
           {message}
         </div>
       )}
@@ -936,70 +1116,176 @@ function AdminsManagement() {
         </div>
       )}
 
-      <div className="max-w-2xl bg-white rounded-lg shadow-md p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Username *</label>
-              <input
-                type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mobile *</label>
-              <input
-                type="tel"
-                value={formData.mobile}
-                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              minLength="6"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Creating...' : 'Create Admin'}
-          </button>
-        </form>
+      {/* Admins Table */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                SL
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Photo
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Admin Info
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contact
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Created
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {admins.map((admin, index) => (
+              <tr key={admin.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                    {admin.photo ? (
+                      <img 
+                        src={`${ENV.BACKEND_URL}${admin.photo}`} 
+                        alt={admin.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xl font-bold text-white">
+                        {admin.name?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-purple-600" />
+                    {admin.name}
+                  </div>
+                  <div className="text-sm text-gray-500">@{admin.username}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{admin.email}</div>
+                  <div className="text-sm text-gray-500">{admin.mobile}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      admin.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {admin.isActive ? '● Active' : '○ Inactive'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {new Date(admin.createdAt).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {/* Add Admin Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-8 relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h2 className="text-2xl font-bold text-secondary mb-6 flex items-center gap-2">
+              <Shield className="w-6 h-6" />
+              Create New Admin
+            </h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Username *</label>
+                  <input
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Mobile *</label>
+                  <input
+                    type="tel"
+                    value={formData.mobile}
+                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  minLength="6"
+                  required
+                />
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Creating...' : 'Create Admin'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

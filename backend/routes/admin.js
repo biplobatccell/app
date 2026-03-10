@@ -203,6 +203,22 @@ router.put('/members/:id/toggle-status', authenticateAdmin, async (req, res) => 
   }
 });
 
+// Get all admins
+router.get('/admins', authenticateAdmin, async (req, res) => {
+  try {
+    const admins = await User.findAll({
+      where: { role: 'admin' },
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({ success: true, data: admins });
+  } catch (error) {
+    console.error('Get admins error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch admins' });
+  }
+});
+
 // Create new admin
 router.post('/create-admin', authenticateAdmin, [
   body('email').isEmail(),
